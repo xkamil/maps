@@ -20,24 +20,25 @@ L.tileLayer(tileServer).addTo(map);
 var hash = L.hash(map)
 var mapGrid = document.getElementById('map-grid');
 var gridSize = 0.1;
+var minMapZoom = 7;
 
 map.addEventListener('move', e => {
-	updateMapGridSize(map, mapGrid);
-	updateGrid(map, mapGrid);
+	updateMapGridSize();
+	updateGrid();
 })
 
-function updateMapGridSize(map, mapGrid){
+function updateMapGridSize(){
   mapGrid.width  = map._size.x;
   mapGrid.height = map._size.y;
 }
 
-function updateGrid(map, mapGrid){
+function updateGrid(){
 	console.log('updating')
 	var ctx = mapGrid.getContext('2d');
 	ctx.strokeStyle = "#990000"
 	var bounds = map.getBounds();
 
-	if(map.getZoom() < 7){
+	if(map.getZoom() < minMapZoom){
 		return;
 	}
 
@@ -59,15 +60,6 @@ function updateGrid(map, mapGrid){
   		ctx.lineTo(right.x, right.y);
   		ctx.stroke();
 	}	
-
-	var exampleBounds = {
-		_southWest: {lat: 34.17999758688084, lng: 30.992431640625004}, //lat = y, lng = x   dol - lewo
-		_northEast: {lat: 36.45221769643574, lng: 39.232177734375} // 					    gora - prawo
-	}
-
-	var point = latLngToPoint(map, bounds._northEast);
-	
-
 }
 
 function latLngToPoint(map, latLng){
@@ -79,40 +71,11 @@ function updateGridSize(size) {
 	updateGrid();
 }
 
-function updateGrid2(map, mapGrid){
-	console.log('updating')
-	var ctx = mapGrid.getContext('2d');
-	ctx.strokeStyle = "#990000"
-	var gridSize = 0.1;
-	var bounds = map.getBounds();
-
-	for(var i = bounds._southWest.lng; i < bounds._northEast.lng; i+=gridSize ){
-		var up = latLngToPoint(map, {lat: bounds._southWest.lat, lng: i});
-		var down = latLngToPoint(map, {lat: bounds._northEast.lat, lng: i});
-
-		ctx.moveTo(up.x, up.y);
-  		ctx.lineTo(down.x, down.y);
-  		ctx.stroke();
-	}
-
-	for(var i = bounds._southWest.lat; i < bounds._northEast.lat; i+=gridSize ){
-		var left = latLngToPoint(map, {lat: i, lng: bounds._southWest.lng });
-		var right = latLngToPoint(map, {lat: i, lng: bounds._northEast.lng });
-		
-		ctx.moveTo(left.x, left.y);
-  		ctx.lineTo(right.x, right.y);
-  		ctx.stroke();
-	}	
-
-	var exampleBounds = {
-		_southWest: {lat: 34.17999758688084, lng: 30.992431640625004}, //lat = y, lng = x   dol - lewo
-		_northEast: {lat: 36.45221769643574, lng: 39.232177734375} // 					    gora - prawo
-	}
-
-	var point = latLngToPoint(map, bounds._northEast);
-	
-
+function updateGridMinZoom(zoom) {
+	minMapZoom = zoom;
+	updateGrid();
 }
+
 
 </script>
 
