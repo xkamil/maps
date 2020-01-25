@@ -3,33 +3,7 @@
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.3/dist/leaflet.css">
 	<script src="https://unpkg.com/leaflet@1.3/dist/leaflet.js"></script>
 	<script src="https://unpkg.com/leaflet-hash@0.2.1/leaflet-hash.js"></script>
-	<style type="text/css">
-		.leaflet-tile-container { 
-			pointer-events: auto; 
-		}
-
-		.map-container {
-			width: 100%; 
-			height: 100%; 
-			padding: 10px; 
-			position: relative;
-		}
-
-		#map {
-			width: 100%; 
-			height: 100%; 
-			background-color: red; 
-			position: absolute; 
-			opacity: 0.5;
-		}
-
-		#map-grid {
-			-height: 100%; 
-			-width: 100%; 
-			position: absolute;
-		}
-
-	</style>
+	<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body style="height:100%;margin:0;padding:0;">
 	<div class="map-container">
@@ -45,6 +19,7 @@ var map = L.map('map').setView([25.36629, 25.83335], 18);
 L.tileLayer(tileServer).addTo(map);
 var hash = L.hash(map)
 var mapGrid = document.getElementById('map-grid');
+var gridSize = 0.1;
 
 map.addEventListener('move', e => {
 	updateMapGridSize(map, mapGrid);
@@ -57,6 +32,54 @@ function updateMapGridSize(map, mapGrid){
 }
 
 function updateGrid(map, mapGrid){
+	console.log('updating')
+	var ctx = mapGrid.getContext('2d');
+	ctx.strokeStyle = "#990000"
+	var bounds = map.getBounds();
+
+	if(map.getZoom() < 7){
+		return;
+	}
+
+
+	for(var i = bounds._southWest.lng - (bounds._southWest.lng % gridSize); i < bounds._northEast.lng; i+=gridSize ){
+		var up = latLngToPoint(map, {lat: bounds._southWest.lat, lng: i});
+		var down = latLngToPoint(map, {lat: bounds._northEast.lat, lng: i});
+
+		ctx.moveTo(up.x, up.y);
+  		ctx.lineTo(down.x, down.y);
+  		ctx.stroke();
+	}
+
+	for(var i = bounds._southWest.lat - (bounds._southWest.lat % gridSize) ; i < bounds._northEast.lat; i+=gridSize ){
+		var left = latLngToPoint(map, {lat: i, lng: bounds._southWest.lng });
+		var right = latLngToPoint(map, {lat: i, lng: bounds._northEast.lng });
+		
+		ctx.moveTo(left.x, left.y);
+  		ctx.lineTo(right.x, right.y);
+  		ctx.stroke();
+	}	
+
+	var exampleBounds = {
+		_southWest: {lat: 34.17999758688084, lng: 30.992431640625004}, //lat = y, lng = x   dol - lewo
+		_northEast: {lat: 36.45221769643574, lng: 39.232177734375} // 					    gora - prawo
+	}
+
+	var point = latLngToPoint(map, bounds._northEast);
+	
+
+}
+
+function latLngToPoint(map, latLng){
+	return map.latLngToContainerPoint(latLng);
+}
+
+function updateGridSize(size) {
+	gridSize = size;
+	updateGrid();
+}
+
+function updateGrid2(map, mapGrid){
 	console.log('updating')
 	var ctx = mapGrid.getContext('2d');
 	ctx.strokeStyle = "#990000"
@@ -90,46 +113,6 @@ function updateGrid(map, mapGrid){
 	
 
 }
-
-function latLngToPoint(map, latLng){
-	var point = map.latLngToLayerPoint(latLng);
-	return map.layerPointToContainerPoint(point);
-}
-
-var gridLayer;
-var minGridZoom = 6; 
-
-function drawGrid(bounds){
-  try{
-    	map.removeLayer(gridLayer);
-  }catch(e){
-     console.log('e')
-  }
-
-	if(map.getZoom() < minGridZoom){
-		return;
-	}
-
-	gridLayer = L.layerGroup();
-	var bounds = map.getBounds();
-
-	var latMin = bounds._southWest.lat;
-	var latMax = bounds._northEast.lat;
-	var lngMin = bounds._southWest.lng;
-	var lngMax = bounds._northEast.lng;
-
-	//console.log(latMin + ' - ' + latMax + ', ' + lngMin + ' - ' + lngMax);
-
-	for(var i=Math.round(latMin); i<latMax; i+=1){
-		for(j=Math.round(lngMin); j<lngMax; j+=1){ 
-			L.marker([i, j]).addTo(gridLayer);
-		}
-	}
-	gridLayer.addTo(map);
-}
-
-map.addEventListener('moveend', z => drawGrid(map.getBounds()));
-
 
 </script>
 
